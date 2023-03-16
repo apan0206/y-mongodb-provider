@@ -8,14 +8,16 @@ export class MongoAdapter {
 	 * @param {object} [opts]
 	 * @param {string} [opts.collection] Name of the collection where all documents are stored.
 	 * @param {boolean} [opts.multipleCollections] When set to true, each document gets an own
+	 * @param {(string)=>string)} [opts.collectionNameCallback] When set, custom collection name
 	 * collection (instead of all documents stored in the same one).
 	 * When set to true, the option $collection gets ignored.
 	 */
-	constructor(location, { collection, multipleCollections }) {
+	constructor(location, { collection, multipleCollections, collectionNameCallback = null }) {
 		this.location = location;
 		this.collection = collection;
 		this.multipleCollections = multipleCollections;
 		this.db = null;
+		this.collectionNameCallback = collectionNameCallback;
 		this.open();
 	}
 
@@ -40,7 +42,11 @@ export class MongoAdapter {
 	 */
 	_getCollectionName({ docName }) {
 		if (this.multipleCollections) {
-			return docName;
+			if (this.collectionNameCallback) {
+				return this.collectionNameCallback(docName);
+			} else {
+				return docName;
+			}
 		} else {
 			return this.collection;
 		}
